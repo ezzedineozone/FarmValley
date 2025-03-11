@@ -3,12 +3,15 @@ using UnityEngine;
 public class CharacterControlls : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    public float movement_sensitivity = 0.5f;
+    [SerializeField] float movement_sensitivity = 1f;
     Animator anim;
+    Rigidbody2D rb;
 
     void Start()
     {
-       anim = this.GetComponent<Animator>(); 
+        anim = this.GetComponent<Animator>();
+        rb = this.GetComponent<Rigidbody2D>();
+        rb.gravityScale = 0;
     }
 
     // Update is called once per frame
@@ -18,8 +21,8 @@ public class CharacterControlls : MonoBehaviour
         {
             float hz = Input.GetAxis("Horizontal");
             float vt = Input.GetAxis("Vertical");
-            Vector3 movement = new Vector3(hz, vt, 0);
-            transform.position += movement * movement_sensitivity * Time.deltaTime;
+            Vector3 movement = new Vector2(hz, vt) * movement_sensitivity;
+            rb.linearVelocity = movement;
             float x_speed = hz;
             float y_speed = vt;
             anim.SetFloat("x_speed", x_speed);
@@ -33,6 +36,12 @@ public class CharacterControlls : MonoBehaviour
             {
                 anim.SetFloat("movement_mode", 1);
             } 
+        } else
+        {
+            anim.SetFloat("x_speed", 0);
+            anim.SetFloat("y_speed", 0);
+            anim.SetFloat("movement_mode", 1);
+            rb.linearVelocity = Vector2.zero;
         }
     }
 }
