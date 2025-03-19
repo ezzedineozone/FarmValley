@@ -1,13 +1,27 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
-public class CharacterControlls : MonoBehaviour
+public class Character : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     [SerializeField] float movement_sensitivity = 1f;
-    Animator anim;
+    public Animator anim;
     Rigidbody2D rb;
+    public static Character instance;
+    public static event Action playerInteracted;
 
+    void Awake()
+    {
+        if (instance == null)
+        {
+            instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
     void Start()
     {
         anim = this.GetComponent<Animator>();
@@ -94,6 +108,7 @@ public class CharacterControlls : MonoBehaviour
     }
     void Swing()
     {
+        playerInteracted?.Invoke();
         anim.SetBool("in_action", true);
         anim.SetBool("is_swinging", true);
     }
