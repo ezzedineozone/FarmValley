@@ -12,11 +12,12 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         WoodenRoof,
         Water
     }
+    public float z_index = -1.0f;
     [SerializeField]
     private Textures texture;
     private Sprite textureObject;
     public bool is_animated;
-
+    [SerializeField] GameEvents gameEvents; 
 
     public bool IsPlayerInRange()
     {
@@ -25,32 +26,15 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         return distance < 1.5f;
     }
 
-    public bool IsPlayerLookingAt()
+    public bool IsPlayerLookingAt(Vector2 lookDir)
     {
-        var movement_mode = Character.instance.anim.GetFloat("movement_mode");
-        var left_right_dir = Character.instance.anim.GetFloat("left_right_dir");
-        var up_down_dir = Character.instance.anim.GetFloat("up_down_dir");
-        var x = this.transform.position.x - Character.instance.transform.position.x;
-        var y = this.transform.position.y - Character.instance.transform.position.y;
-        if (movement_mode == 0)
+        Vector2 origin = (Vector2)Character.instance.transform.position + lookDir.normalized * 0.08f;
+        RaycastHit2D hit = Physics2D.Raycast(origin, lookDir, 0.08f);
+        if (hit.collider != null)
         {
-            if (left_right_dir > 0 && x > 0)
+            if (hit.collider.gameObject == this.gameObject)
             {
-                return true;
-            }
-            if (left_right_dir < 0 && x < 0)
-            {
-                return true;
-            }
-        }
-        else
-        {
-            if (up_down_dir > 0 && y > 0)
-            {
-                return true;
-            }
-            if (up_down_dir < 0 && y < 0)
-            {
+                Debug.Log("Player is looking at the tile");
                 return true;
             }
         }
@@ -59,15 +43,15 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
 
     public void SubscribeToPlayerInteraction()
     {
-        Character.playerInteracted += OnPlayerInteraction;
+        gameEvents.onPlayerInteract.AddListener(OnPlayerInteraction);
     }
-    public void OnPlayerInteraction()
+    public void OnPlayerInteraction(Vector2 lookDir)
     {
-        StartCoroutine(OnPlayerInteractionCorutine());
+        StartCoroutine(OnPlayerInteractionCorutine(lookDir));
     }
-    public IEnumerator OnPlayerInteractionCorutine()
+    public IEnumerator OnPlayerInteractionCorutine(Vector2 lookDir)
     {
-        if (IsPlayerInRange() && IsPlayerLookingAt())
+        if (IsPlayerInRange() && IsPlayerLookingAt(lookDir))
         {
             yield return new WaitForSeconds(1f);
             ChangeTexture(Tile.Textures.TilledDirt);
@@ -79,6 +63,7 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
     {
         ChangeTexture(texture);
         SubscribeToPlayerInteraction();
+        this.transform.position = new Vector3(this.transform.position.x, this.transform.position.y, z_index);
     }
 
     // Update is called once per frame

@@ -4,5 +4,5 @@ using UnityEngine;
 public interface IInteractibleObject
 {
     void SubscribeToPlayerInteraction();
-    void OnPlayerInteraction();
+    void OnPlayerInteraction(Vector2 lookDir);
 }

@@ -4,12 +4,16 @@ using System;
 
 public class Character : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     [SerializeField] float movement_sensitivity = 1f;
+    [SerializeField] GameEvents gameEvents; 
+
     public Animator anim;
     Rigidbody2D rb;
     public static Character instance;
     public static event Action playerInteracted;
+
+    private Vector2 look_direction = Vector2.down;
+    private float z_index = 0.0f;
 
     void Awake()
     {
@@ -22,102 +26,93 @@ public class Character : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
     void Start()
     {
-        anim = this.GetComponent<Animator>();
-        rb = this.GetComponent<Rigidbody2D>();
+        anim = GetComponent<Animator>();
+        rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0;
+        this.transform.position = new Vector3(0, 0, z_index);
     }
 
-    // Update is called once per frame
     void Update()
     {
         HandleCharacterMovement();
+
         if (Input.GetMouseButton(0))
         {
             StartCoroutine(CorutineSwing());
         }
     }
+
     void HandleCharacterMovement()
     {
         if (anim.GetBool("in_action"))
         {
-            rb.linearVelocity = Vector2.zero;
-            anim.SetBool("is_moving", false);
-            anim.SetFloat("x_speed", 0);
-            anim.SetFloat("y_speed", 0);
+            StopMovement();
             return;
         }
+
         float hz = Input.GetAxis("Horizontal");
         float vt = Input.GetAxis("Vertical");
-        if (hz > 0)
+
+        Vector2 input = new Vector2(hz, vt);
+        Vector2 movement = input.normalized * movement_sensitivity;
+        rb.linearVelocity = movement;
+
+        bool isMoving = input != Vector2.zero;
+        anim.SetBool("is_moving", isMoving);
+
+        if (isMoving)
         {
-            anim.SetFloat("left_right_dir", 1);
-            anim.SetFloat("movement_mode", 0);
-            anim.SetBool("is_moving", true);
-        }
-        else if (hz < 0)
-        {
-            anim.SetFloat("left_right_dir", 0);
-            anim.SetFloat("movement_mode", 0);
-            anim.SetBool("is_moving", true);
-        }
-        if (vt > 0)
-        {
-            anim.SetFloat("up_down_dir", 0);
-            anim.SetFloat("movement_mode", 1);
-            anim.SetBool("is_moving", true);
-        }
-        else if (vt < 0)
-        {
-            anim.SetFloat("up_down_dir", 1);
-            anim.SetFloat("movement_mode", 1);
-            anim.SetBool("is_moving", true);
-        }
-        if (hz != 0 && vt != 0)
-        {
-            Vector2 movement = new Vector2(hz, vt) * movement_sensitivity;
-            rb.linearVelocity = movement;
+            look_direction = input.normalized;
+
             anim.SetFloat("x_speed", hz);
             anim.SetFloat("y_speed", vt);
-            anim.SetFloat("movement_mode", 0);
-        }
-        else if (hz == 0 && vt != 0)
-        {
-            anim.SetFloat("x_speed", 0);
-            anim.SetFloat("y_speed", vt);
-            anim.SetFloat("movement_mode", 1);
-            Vector2 movement = new Vector2(0, vt) * movement_sensitivity;
-            rb.linearVelocity = movement;
-        }
-        else if (hz != 0 && vt == 0)
-        {
-            anim.SetFloat("x_speed", hz);
-            anim.SetFloat("y_speed", 0);
-            anim.SetFloat("movement_mode", 0);
-            Vector2 movement = new Vector2(hz, 0) * movement_sensitivity;
-            rb.linearVelocity = movement;
+
+            if (Mathf.Abs(hz) > Mathf.Abs(vt))
+            {
+                anim.SetFloat("movement_mode", 0);
+                anim.SetFloat("left_right_dir", hz > 0 ? 1 : 0);
+            }
+            else
+            {
+                anim.SetFloat("movement_mode", 1);
+                anim.SetFloat("up_down_dir", vt > 0 ? 0 : 1);
+            }
         }
         else
         {
             anim.SetFloat("x_speed", 0);
             anim.SetFloat("y_speed", 0);
-            anim.SetBool("is_moving", false);
-            rb.linearVelocity = Vector2.zero;
         }
     }
+
+    void StopMovement()
+    {
+        rb.linearVelocity = Vector2.zero;
+        anim.SetBool("is_moving", false);
+        anim.SetFloat("x_speed", 0);
+        anim.SetFloat("y_speed", 0);
+    }
+
     void Swing()
     {
         playerInteracted?.Invoke();
         anim.SetBool("in_action", true);
         anim.SetBool("is_swinging", true);
+
+        if (gameEvents != null)
+        {
+            gameEvents.onPlayerInteract.Invoke(look_direction);
+        }
     }
+
     IEnumerator CorutineSwing()
     {
-        if(anim.GetBool("in_action"))
-        {
+        if (anim.GetBool("in_action"))
             yield break;
-        }
+
         Swing();
         yield return new WaitForSeconds(1.0f);
         anim.SetBool("is_swinging", false);
