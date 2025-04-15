@@ -19,23 +19,33 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
     public bool is_animated;
     [SerializeField] GameEvents gameEvents; 
 
+    [SerializeField] private GameObject storedItemPrefab;
+
     public bool IsPlayerInRange()
     {
         Transform ts = Character.instance.transform;
         float distance = Vector3.Distance(ts.position, this.transform.position);
+    
         return distance < 1.5f;
     }
 
     public bool IsPlayerLookingAt(Vector2 lookDir)
     {
         Vector2 origin = (Vector2)Character.instance.transform.position + lookDir.normalized * 0.08f;
-        RaycastHit2D hit = Physics2D.Raycast(origin, lookDir, 0.08f);
+        int layerMask = LayerMask.GetMask("TileLayer");
+        Debug.Log("Origin: " + origin);
+        Debug.Log("Look Direction: " + lookDir);
+        RaycastHit2D hit = Physics2D.Raycast(origin, lookDir, 0.08f, layerMask);
         if (hit.collider != null)
         {
+            Debug.Log("Hit: " + hit.collider.gameObject.name);
             if (hit.collider.gameObject == this.gameObject)
             {
-                Debug.Log("Player is looking at the tile");
                 return true;
+            }
+            else
+            {
+                Debug.Log("Hit: " + hit.collider.gameObject.name + " is not the tile.");
             }
         }
         return false;
@@ -55,6 +65,27 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         {
             yield return new WaitForSeconds(1f);
             ChangeTexture(Tile.Textures.TilledDirt);
+            if(storedItemPrefab != null)
+            {
+                if(this.texture == Tile.Textures.Grass){
+                    GameObject item = Instantiate(storedItemPrefab, this.transform.position, Quaternion.identity);
+                    item.GetComponent<Item>().itemName = "Seeds";
+                    item.GetComponent<Item>().itemID = 1;
+                    item.GetComponent<Item>().itemDescription = "Seeds for planting.";
+                    item.GetComponent<Item>().texture = Item.ItemTexture.Seeds;
+
+                    StartCoroutine(DropItemCorutine(item, lookDir));
+
+
+                }
+                storedItemPrefab = null;
+            }
+            else
+            {
+                Debug.LogError("Stored Item Prefab is not assigned in the inspector.");
+            }
+        } else {
+
         }
     }
     
@@ -64,6 +95,9 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         ChangeTexture(texture);
         SubscribeToPlayerInteraction();
         this.transform.position = new Vector3(this.transform.position.x, this.transform.position.y, z_index);
+        gameObject.layer = LayerMask.NameToLayer("TileLayer");
+        Debug.Log(gameObject.layer);
+    
     }
 
     // Update is called once per frame
@@ -77,5 +111,27 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         textureObject = TextureProvider.GetSprite(texture);
         GetComponent<SpriteRenderer>().sprite = textureObject;
     }
+IEnumerator DropItemCorutine(GameObject item, Vector2 dir)
+{
+    // Disable collider initially to prevent immediate interaction
+    item.GetComponent<Collider2D>().enabled = false;
+    
+    // Get Rigidbody2D component for physics interactions
+    Rigidbody2D rb = item.GetComponent<Rigidbody2D>();
+    
+    // Set gravity and other physics properties
+    rb.linearDamping = 2f;  // Apply drag for friction effect
+    
+    // Add an upward force and set linear velocity for a more dynamic motion
+    rb.linearVelocity = Vector2.zero;  // Reset velocity before applying forces
+    rb.AddForce(new Vector2(dir.x, 1f) * 5f, ForceMode2D.Impulse);  // Slight upward force
+    rb.AddForce(dir * 2f, ForceMode2D.Impulse);  // Apply horizontal force
+    
+    // Allow item to move for a short period
+    yield return new WaitForSeconds(1f);
+    
+    // Re-enable collider after the item settles
+    item.GetComponent<Collider2D>().enabled = true;
+}
 
 }

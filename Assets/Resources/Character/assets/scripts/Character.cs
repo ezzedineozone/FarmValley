@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System;
+using Unity.VisualScripting;
 
 public class Character : MonoBehaviour
 {
@@ -13,20 +14,36 @@ public class Character : MonoBehaviour
     public static event Action playerInteracted;
 
     private Vector2 look_direction = Vector2.down;
-    private float z_index = 0.0f;
+    private float z_index = -1.0f;
+
+    private Vector2 game_width_height = new Vector2(10, 10);
+    private Vector3 origin = new Vector3(0, 0,0);
 
     void Awake()
     {
         if (instance == null)
         {
             instance = this;
+            instance.tag = "Player";
         }
         else
         {
             Destroy(gameObject);
         }
     }
-
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        Debug.Log("Trigger Entered: " + other.gameObject.name);
+        
+        if(true)
+        {
+            Item item = other.gameObject.GetComponent<Item>();
+            if (item != null)
+            {
+                gameEvents.onItemPickup.Invoke(item);
+            }
+        }
+    }
     void Start()
     {
         anim = GetComponent<Animator>();
@@ -45,48 +62,51 @@ public class Character : MonoBehaviour
         }
     }
 
-    void HandleCharacterMovement()
+void HandleCharacterMovement()
+{
+    if (anim.GetBool("in_action"))
     {
-        if (anim.GetBool("in_action"))
+        StopMovement();
+        return;
+    }
+
+    float hz = Input.GetAxis("Horizontal");
+    float vt = Input.GetAxis("Vertical");
+
+    Vector2 input = new Vector2(hz, vt);
+    Vector2 movement = input.normalized * movement_sensitivity;
+    Vector3 newPosition = rb.position + movement * Time.deltaTime;
+    float clampedX = Mathf.Clamp(newPosition.x, origin.x, origin.x + game_width_height.x);
+    float clampedY = Mathf.Clamp(newPosition.y, origin.y, origin.y + game_width_height.y);
+    rb.position = new Vector2(clampedX, clampedY);
+
+    bool isMoving = input != Vector2.zero;
+    anim.SetBool("is_moving", isMoving);
+
+    if (isMoving)
+    {
+        look_direction = input.normalized;
+
+        anim.SetFloat("x_speed", hz);
+        anim.SetFloat("y_speed", vt);
+
+        if (Mathf.Abs(hz) > Mathf.Abs(vt))
         {
-            StopMovement();
-            return;
-        }
-
-        float hz = Input.GetAxis("Horizontal");
-        float vt = Input.GetAxis("Vertical");
-
-        Vector2 input = new Vector2(hz, vt);
-        Vector2 movement = input.normalized * movement_sensitivity;
-        rb.linearVelocity = movement;
-
-        bool isMoving = input != Vector2.zero;
-        anim.SetBool("is_moving", isMoving);
-
-        if (isMoving)
-        {
-            look_direction = input.normalized;
-
-            anim.SetFloat("x_speed", hz);
-            anim.SetFloat("y_speed", vt);
-
-            if (Mathf.Abs(hz) > Mathf.Abs(vt))
-            {
-                anim.SetFloat("movement_mode", 0);
-                anim.SetFloat("left_right_dir", hz > 0 ? 1 : 0);
-            }
-            else
-            {
-                anim.SetFloat("movement_mode", 1);
-                anim.SetFloat("up_down_dir", vt > 0 ? 0 : 1);
-            }
+            anim.SetFloat("movement_mode", 0);
+            anim.SetFloat("left_right_dir", hz > 0 ? 1 : 0);
         }
         else
         {
-            anim.SetFloat("x_speed", 0);
-            anim.SetFloat("y_speed", 0);
+            anim.SetFloat("movement_mode", 1);
+            anim.SetFloat("up_down_dir", vt > 0 ? 0 : 1);
         }
     }
+    else
+    {
+        anim.SetFloat("x_speed", 0);
+        anim.SetFloat("y_speed", 0);
+    }
+}
 
     void StopMovement()
     {
@@ -117,5 +137,12 @@ public class Character : MonoBehaviour
         yield return new WaitForSeconds(1.0f);
         anim.SetBool("is_swinging", false);
         anim.SetBool("in_action", false);
+    }
+    public void setGameWidthHeight(Vector2 game_width_height, Vector3 origin)
+    {
+        this.game_width_height = game_width_height;
+        this.origin = origin;
+        Debug.Log("Game Origin: " + origin);
+        Debug.Log("Game Width Height: " + game_width_height);
     }
 }
