@@ -3,12 +3,12 @@ using UnityEngine.UI; // Required for UI components
 
 public class HotbarSlot : MonoBehaviour
 {
-    struct Slot
+    public struct Slot
     {
         public Item item;
         public int amount;
     }
-    Slot slot;
+    public Slot slot;
     Image childImage;
 
     void Start()
@@ -54,13 +54,29 @@ public class HotbarSlot : MonoBehaviour
     {
         if (IsEmpty())
         {
-            slot.item = item;
+            if (item == null)
+            {
+                Debug.LogError("Cannot set a null item.");
+                return false;
+            }
+
+            // Duplicate the item
+            Item duplicatedItem = Instantiate(item);
+            duplicatedItem.name = item.name + "_Copy"; // Optional: Rename the duplicated item for clarity
+
+            // Assign the duplicated item and amount to the slot
+            slot.item = duplicatedItem;
             slot.amount = amount;
+            //make slot.item invisible
+            duplicatedItem.gameObject.SetActive(false);
+
+            Debug.Log($"Item duplicated and set: {duplicatedItem.itemName}, Amount: {amount}");
             return true;
         }
+
+        Debug.LogWarning("Slot is not empty. Cannot set item.");
         return false;
     }
-
     public int GetItemAmount()
     {
         return slot.amount;
@@ -89,5 +105,63 @@ public class HotbarSlot : MonoBehaviour
         {
             Debug.LogError("Texture not found for item: " + slot.item.itemName);
         }
+    }
+    public void Select()
+    {
+        if (childImage == null)
+        {
+            Debug.LogError("Child image is not initialized.");
+            return;
+        }
+
+        // Create a new temporary Image object
+        GameObject tempObject = new GameObject("SelectedItemHighlight");
+        tempObject.transform.SetParent(transform);
+        tempObject.transform.localPosition = Vector3.zero;
+        tempObject.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        Image tempImage = tempObject.AddComponent<Image>();
+        tempImage.sprite = childImage.sprite; // Use the same sprite as the childImage
+        tempImage.color = new Color(1f, 1f, 1f, 0.5f); // Semi-transparent white
+        tempImage.raycastTarget = false; // Disable raycast blocking for the temporary image
+    }
+
+    public void DeSelect()
+    {
+        if (childImage == null)
+        {
+            Debug.LogError("Child image is not initialized.");
+            return;
+        }
+
+        // Reset the childImage to its original state
+        if(slot.item != null)
+        {
+            childImage.color = new Color(1f, 1f, 1f, 0f); // Fully transparent
+            childImage.rectTransform.localScale = new Vector3(0.5f, 0.5f, 1f);
+        }
+
+
+
+        // Destroy any temporary highlight objects
+        Transform highlight = transform.Find("SelectedItemHighlight");
+        if (highlight != null)
+        {
+            Destroy(highlight.gameObject);
+        }
+        ChangeSlotDisplay();
+    }
+    public void clearSlot(){
+        if (slot.item != null)
+        {
+            Destroy(slot.item.gameObject); // Destroy the item GameObject
+            slot.item = null; // Set the item to null
+            slot.amount = 0; // Reset the amount to 0
+            childImage.sprite = null; // Clear the sprite
+            ChangeSlotDisplay(); // Update the display
+        }
+    }
+    public Item GetItem(){
+        return slot.item;
     }
 }

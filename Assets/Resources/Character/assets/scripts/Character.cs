@@ -60,6 +60,12 @@ public class Character : MonoBehaviour
         {
             StartCoroutine(CorutineSwing());
         }
+        // E key call interact
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            Debug.Log("E key pressed");
+            Interact();
+        }
     }
 
 void HandleCharacterMovement()
@@ -127,7 +133,13 @@ void HandleCharacterMovement()
             gameEvents.onPlayerInteract.Invoke(look_direction);
         }
     }
+    void Interact(){
 
+        if (gameEvents != null)
+        {
+            gameEvents.onPlayerInteractWithItem.Invoke(look_direction, GameObject.FindObjectOfType<Hotbar>().GetItem());
+        }
+    }
     IEnumerator CorutineSwing()
     {
         if (anim.GetBool("in_action"))

@@ -3,13 +3,15 @@ using UnityEngine;
 
 public class Hotbar : MonoBehaviour
 {
-    [SerializeField] private GameObject hotBarSlotPrefab;
+    [SerializeField] private HotbarSlot hotBarSlotPrefab;
     [SerializeField] private int numberOfSlots = 10;
     [SerializeField] private float slotSpacing = 5f;
     [SerializeField] GameEvents gameEvents;
-    List<GameObject> hotBarSlots = new List<GameObject>();
+    List<HotbarSlot> hotBarSlots = new List<HotbarSlot>();
 
     int filled_slots = 0;
+
+    public HotbarSlot selectedSlot = null;
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -22,7 +24,7 @@ public class Hotbar : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        ChangeHotBarSlot();
     }
 
 
@@ -36,7 +38,7 @@ public class Hotbar : MonoBehaviour
 
         for (int i = 0; i < amount; i++)
         {
-            GameObject hotBarSlot = Instantiate(hotBarSlotPrefab, transform);
+            HotbarSlot hotBarSlot = Instantiate(hotBarSlotPrefab, transform);
             RectTransform rectTransform = hotBarSlot.GetComponent<RectTransform>();
             rectTransform.anchorMin = new Vector2(0, 0.5f);
             rectTransform.anchorMax = new Vector2(0, 0.5f);
@@ -55,6 +57,8 @@ public class Hotbar : MonoBehaviour
 
             hotBarSlots.Add(hotBarSlot);
         }
+        selectedSlot = hotBarSlots[0];
+        selectedSlot.Select();
     }
     void OnInventoryChange(Item item, int amount)
     {
@@ -76,5 +80,25 @@ public class Hotbar : MonoBehaviour
             }
         }
     }
-
+    void ChangeHotBarSlot(){
+        bool ctrl_clicked = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+        if(ctrl_clicked) return;
+        if (Input.GetAxis("Mouse ScrollWheel") > 0f)
+        {
+            selectedSlot.DeSelect();
+            int nextIndex = (hotBarSlots.IndexOf(selectedSlot) + 1) % hotBarSlots.Count;
+            selectedSlot = hotBarSlots[nextIndex];
+            selectedSlot.Select();
+        }
+        else if (Input.GetAxis("Mouse ScrollWheel") < 0f)
+        {
+            selectedSlot.DeSelect();
+            int nextIndex = (hotBarSlots.IndexOf(selectedSlot) - 1 + hotBarSlots.Count) % hotBarSlots.Count;
+            selectedSlot = hotBarSlots[nextIndex];
+            selectedSlot.Select();
+        }
+    }
+    public Item GetItem(){
+        return this.selectedSlot.GetItem();
+    }
 }

@@ -20,15 +20,7 @@ public class CameraScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float mw = Input.GetAxis("Mouse ScrollWheel");
-        if (mw > 0f) 
-        {
-            Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize + mw * zoom_sensitivity * -1, min_zoom, max_zoom);
-        }
-        else if (mw < 0f) 
-        {
-            Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize + mw * zoom_sensitivity * -1, min_zoom, max_zoom);
-        }
+        ChangeCameraZoom();
         FollowCharacter();
     }
 
@@ -47,5 +39,19 @@ public class CameraScript : MonoBehaviour
         this.origin = origin;
         Debug.Log("Game Origin: " + origin);
         Debug.Log("Game Width Height: " + game_width_height);
+    }
+    void ChangeCameraZoom(){
+        float mw = Input.GetAxis("Mouse ScrollWheel");
+        // get ctrl button
+        bool ctrl_clicked = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+        if(!ctrl_clicked) return;
+        if (mw > 0f) 
+        {
+            Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize + mw * zoom_sensitivity * -1, min_zoom, max_zoom);
+        }
+        else if (mw < 0f) 
+        {
+            Camera.main.orthographicSize = Mathf.Clamp(Camera.main.orthographicSize + mw * zoom_sensitivity * -1, min_zoom, max_zoom);
+        }
     }
 }

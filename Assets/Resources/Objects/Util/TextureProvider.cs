@@ -5,10 +5,11 @@ public class TextureProvider
 {
     private static Dictionary<Tile.Textures, string[]> textureMappings = new Dictionary<Tile.Textures, string[]>
     {
-        { Tile.Textures.Grass, new string[] { "Grass_52"} },
-        { Tile.Textures.TilledDirt, new string[] { "Tilled_Dirt_Wide_v2_50" } },
+        { Tile.Textures.Grass, new string[] { "Grass_56"} },
+        { Tile.Textures.TilledDirt, new string[] { "Tilled_Dirt_v2_51" } },
         { Tile.Textures.WoodenRoof, new string[] { "Wooden_House_Roof_Tilset_0" } },
-        { Tile.Textures.Water, new string[] { "Water_0" } }, 
+        { Tile.Textures.Water, new string[] { "Water_0" } },
+        {Tile.Textures.PlantedTilledDirt, new string[] {"Planted_Tilled_Dirt_Wide_v2_11"}}
     };
     private static Dictionary<Item.ItemTexture, string[]> itemTextureMappings = new Dictionary<Item.ItemTexture, string[]>
     {
@@ -45,6 +46,8 @@ public class TextureProvider
             string name = textureNames[randomIndex];
             if (loadedSprites.TryGetValue(name, out Sprite sprite))
             {
+                //change sprite scale to 16x16
+                sprite.rect.Set(0, 0, 16, 16);
                 return sprite;
             }
         }

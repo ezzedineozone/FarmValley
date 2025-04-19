@@ -10,15 +10,16 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         Grass,
         TilledDirt,
         WoodenRoof,
-        Water
+        Water,
+        PlantedTilledDirt
     }
     public float z_index = -1.0f;
     [SerializeField]
     private Textures texture;
     private Sprite textureObject;
     public bool is_animated;
+    bool is_planted;
     [SerializeField] GameEvents gameEvents; 
-
     [SerializeField] private GameObject storedItemPrefab;
 
     public bool IsPlayerInRange()
@@ -31,7 +32,7 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
 
     public bool IsPlayerLookingAt(Vector2 lookDir)
     {
-        Vector2 origin = (Vector2)Character.instance.transform.position + lookDir.normalized * 0.08f;
+        Vector2 origin = (Vector2)Character.instance.transform.position + lookDir.normalized * 0.008f;
         int layerMask = LayerMask.GetMask("TileLayer");
         Debug.Log("Origin: " + origin);
         Debug.Log("Look Direction: " + lookDir);
@@ -54,6 +55,16 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
     public void SubscribeToPlayerInteraction()
     {
         gameEvents.onPlayerInteract.AddListener(OnPlayerInteraction);
+        gameEvents.onPlayerInteractWithItem.AddListener(OnPlayerInteractionWithItem);
+    }
+    public void OnPlayerInteractionWithItem(Vector2 lookDir, Item item)
+    {
+        Debug.Log("OnPlayerInteractionWithItem: " + item);
+        Debug.Log(item);
+        if (item != null && item.itemID == 1 && IsPlayerInRange() && IsPlayerLookingAt(lookDir))
+        {
+            this.Plant(item);
+        }
     }
     public void OnPlayerInteraction(Vector2 lookDir)
     {
@@ -133,5 +144,9 @@ IEnumerator DropItemCorutine(GameObject item, Vector2 dir)
     // Re-enable collider after the item settles
     item.GetComponent<Collider2D>().enabled = true;
 }
-
+    void Plant(Item item){
+        ChangeTexture(Tile.Textures.PlantedTilledDirt);
+        is_planted = true;
+        GameObject.FindGameObjectWithTag("hotbar_main").GetComponent<Hotbar>().selectedSlot.clearSlot();
+    }
 }
