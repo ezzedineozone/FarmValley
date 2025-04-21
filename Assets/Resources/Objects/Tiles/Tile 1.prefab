@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2245544609897735886}
   m_Layer: 0
   m_Name: Tile 1
-  m_TagString: Untagged
+  m_TagString: Tile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -152,3 +152,5 @@ MonoBehaviour:
   is_animated: 0
   gameEvents: {fileID: 11400000, guid: 2de6fa8d023e68f4fbdf032bdc7fe4b6, type: 2}
   storedItemPrefab: {fileID: 5126228058251406383, guid: 63a07d59269db2d46900f361603dbbcd, type: 3}
+  plantedItemPrefab: {fileID: 4784756660829481180, guid: 4e17ef5412b081543b441544ed64d6ab, type: 3}
+  storedDropItemPrefab: {fileID: 8670858600540116423, guid: a28ff245626d0324e97fa1b8766f292e, type: 3}

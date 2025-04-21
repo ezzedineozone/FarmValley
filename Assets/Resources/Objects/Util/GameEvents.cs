@@ -9,4 +9,6 @@ class GameEvents : ScriptableObject
     public UnityEvent<Vector2, Item> onPlayerInteractWithItem = new UnityEvent<Vector2, Item>();
     public UnityEvent<Item , int > onInventoryChange = new UnityEvent<Item , int >();
     public UnityEvent<Item> onItemPickup = new UnityEvent<Item>();
+    public UnityEvent onDayPassed = new UnityEvent();
+    public UnityEvent onPlayerSleep = new UnityEvent();
 }

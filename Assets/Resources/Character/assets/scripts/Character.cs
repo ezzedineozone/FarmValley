@@ -38,6 +38,7 @@ public class Character : MonoBehaviour
         if(true)
         {
             Item item = other.gameObject.GetComponent<Item>();
+            if(item && !item.isPickable) return;
             if (item != null)
             {
                 gameEvents.onItemPickup.Invoke(item);

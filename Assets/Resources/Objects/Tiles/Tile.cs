@@ -19,8 +19,17 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
     private Sprite textureObject;
     public bool is_animated;
     bool is_planted;
+    bool is_plant_spawned = false;
+    int plant_growth_stage = 0;
+    bool is_tilled = false;
     [SerializeField] GameEvents gameEvents; 
     [SerializeField] private GameObject storedItemPrefab;
+    [SerializeField] private GameObject plantedItemPrefab;
+    [SerializeField] private GameObject storedDropItemPrefab;
+
+    GameObject plant = null;
+
+    Item.ItemTexture[] plantStages = new Item.ItemTexture[3] { Item.ItemTexture.Plant0, Item.ItemTexture.Plant1, Item.ItemTexture.Plant2 };
 
     public bool IsPlayerInRange()
     {
@@ -76,6 +85,15 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         {
             yield return new WaitForSeconds(1f);
             ChangeTexture(Tile.Textures.TilledDirt);
+            if(is_tilled){
+                if(plant != null && is_plant_spawned && plant_growth_stage == plantStages.Length - 1){
+                    Destroy(plant);
+                    is_plant_spawned = false;
+                    // drop item of type wheat
+                    GameObject item = Instantiate(storedDropItemPrefab, this.transform.position, Quaternion.identity);
+                    item.transform.position = new Vector3(this.transform.position.x, this.transform.position.y, z_index);
+                }
+            }
             if(storedItemPrefab != null)
             {
                 if(this.texture == Tile.Textures.Grass){
@@ -90,6 +108,7 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
 
                 }
                 storedItemPrefab = null;
+                is_tilled = true;
             }
             else
             {
@@ -122,31 +141,49 @@ public class Tile : MonoBehaviour, IInteractibleWorldObject
         textureObject = TextureProvider.GetSprite(texture);
         GetComponent<SpriteRenderer>().sprite = textureObject;
     }
-IEnumerator DropItemCorutine(GameObject item, Vector2 dir)
-{
-    // Disable collider initially to prevent immediate interaction
-    item.GetComponent<Collider2D>().enabled = false;
-    
-    // Get Rigidbody2D component for physics interactions
-    Rigidbody2D rb = item.GetComponent<Rigidbody2D>();
-    
-    // Set gravity and other physics properties
-    rb.linearDamping = 2f;  // Apply drag for friction effect
-    
-    // Add an upward force and set linear velocity for a more dynamic motion
-    rb.linearVelocity = Vector2.zero;  // Reset velocity before applying forces
-    rb.AddForce(new Vector2(dir.x, 1f) * 5f, ForceMode2D.Impulse);  // Slight upward force
-    rb.AddForce(dir * 2f, ForceMode2D.Impulse);  // Apply horizontal force
-    
-    // Allow item to move for a short period
-    yield return new WaitForSeconds(1f);
-    
-    // Re-enable collider after the item settles
-    item.GetComponent<Collider2D>().enabled = true;
-}
+    IEnumerator DropItemCorutine(GameObject item, Vector2 dir)
+    {
+        // Disable collider initially to prevent immediate interaction
+        item.GetComponent<Collider2D>().enabled = false;
+        
+        // Get Rigidbody2D component for physics interactions
+        Rigidbody2D rb = item.GetComponent<Rigidbody2D>();
+        
+        // Set gravity and other physics properties
+        rb.linearDamping = 2f;  // Apply drag for friction effect
+        
+        // Add an upward force and set linear velocity for a more dynamic motion
+        rb.linearVelocity = Vector2.zero;  // Reset velocity before applying forces
+        rb.AddForce(new Vector2(dir.x, 1f) * 5f, ForceMode2D.Impulse);  // Slight upward force
+        rb.AddForce(dir * 2f, ForceMode2D.Impulse);  // Apply horizontal force
+        
+        // Allow item to move for a short period
+        yield return new WaitForSeconds(1f);
+        
+        // Re-enable collider after the item settles
+        item.GetComponent<Collider2D>().enabled = true;
+    }
     void Plant(Item item){
         ChangeTexture(Tile.Textures.PlantedTilledDirt);
         is_planted = true;
         GameObject.FindGameObjectWithTag("hotbar_main").GetComponent<Hotbar>().selectedSlot.clearSlot();
+    }
+    public void GrowPlant(){
+        if(plant_growth_stage >= plantStages.Length) return;
+        if(is_planted){
+            if(is_plant_spawned){
+                plant_growth_stage++;
+                Item.ItemTexture texture = plantStages[plant_growth_stage];
+                plant.GetComponent<Item>().texture = texture;
+                plant.GetComponent<SpriteRenderer>().sprite = TextureProvider.GetItemSprite(texture);
+            } else {
+                Vector3 spawn_pos = this.transform.position;
+                spawn_pos.z -= 1.0f;
+                plant = Instantiate(plantedItemPrefab, spawn_pos, Quaternion.identity);
+                is_plant_spawned = true;
+                // reverse what the Plant function did
+                ChangeTexture(Tile.Textures.TilledDirt);
+            }
+        }
     }
 }

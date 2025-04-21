@@ -106,6 +106,8 @@ MonoBehaviour:
   itemID: 0
   itemDescription: 
   texture: 0
+  isPickable: 1
+  gameEvents: {fileID: 11400000, guid: 2de6fa8d023e68f4fbdf032bdc7fe4b6, type: 2}
 --- !u!61 &-2917391790775188379
 BoxCollider2D:
   m_ObjectHideFlags: 0

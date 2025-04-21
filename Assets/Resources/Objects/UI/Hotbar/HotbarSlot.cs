@@ -151,15 +151,26 @@ public class HotbarSlot : MonoBehaviour
         }
         ChangeSlotDisplay();
     }
-    public void clearSlot(){
+    public void clearSlot()
+    {
         if (slot.item != null)
         {
-            Destroy(slot.item.gameObject); // Destroy the item GameObject
+            // Destroy the item GameObject
+            Destroy(slot.item.gameObject);
             slot.item = null; // Set the item to null
             slot.amount = 0; // Reset the amount to 0
-            childImage.sprite = null; // Clear the sprite
-            ChangeSlotDisplay(); // Update the display
         }
+
+        // Clear the sprite and reset the childImage
+        if (childImage != null)
+        {
+            childImage.sprite = null; // Clear the sprite
+            childImage.color = new Color(1f, 1f, 1f, 0f); // Fully transparent
+            childImage.rectTransform.localScale = new Vector3(0.5f, 0.5f, 1f); // Reset scale
+        }
+
+        // Update the display to reflect the cleared state
+        ChangeSlotDisplay();
     }
     public Item GetItem(){
         return slot.item;

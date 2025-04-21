@@ -14,7 +14,13 @@ public class TextureProvider
     private static Dictionary<Item.ItemTexture, string[]> itemTextureMappings = new Dictionary<Item.ItemTexture, string[]>
     {
         { Item.ItemTexture.Seeds, new string[] { "wheat_seeds_0" } }
-        , { Item.ItemTexture.Wood, new string[] { "wooden_table" } }
+        , { Item.ItemTexture.Wood, new string[] { "wooden_table" } },
+        {Item.ItemTexture.Bed, new string[] {"bed_0"}},
+        {Item.ItemTexture.Plant0, new string[] {"wheat_stages_2"}},
+        {Item.ItemTexture.Plant1, new string[] {"wheat_stages_5"}},
+        {Item.ItemTexture.Plant2, new string[] {"wheat_stages_7"}},
+        {Item.ItemTexture.Wheat, new string[] {"wheat_0"}},
+
     };
     private static Dictionary<string, Sprite> loadedSprites;
     public static void LoadSprites()

@@ -9,12 +9,21 @@ public class Item : MonoBehaviour
     public string itemDescription;
     [SerializeField]
     public ItemTexture texture;
+    [SerializeField]
+    public bool isPickable = true;
+    [SerializeField]
+    private GameEvents gameEvents;
 
     private Sprite textureObject;
 
     public enum ItemTexture {
         Seeds,
-        Wood
+        Wood,
+        Bed,
+        Plant0,
+        Plant1,
+        Plant2,
+        Wheat
     }
     public virtual void Use()
     {
@@ -22,6 +31,11 @@ public class Item : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
+        if(this.texture == ItemTexture.Bed)
+        {
+            gameEvents.onPlayerSleep.Invoke();
+        }
+        if(!isPickable) return;
         if (collision.CompareTag("Player"))
         {
             Debug.Log("Item picked up: " + itemName);
