@@ -22,6 +22,10 @@ public class TextureProvider
         {Item.ItemTexture.Wheat, new string[] {"wheat_0"}},
 
     };
+    private static Dictionary<NPC.Texture, string[]> npcTextureMappings = new Dictionary<NPC.Texture, string[]>
+    {
+        { NPC.Texture.Horse, new string[] { "Horse_idle_side" } }
+    };
     private static Dictionary<string, Sprite> loadedSprites;
     public static void LoadSprites()
     {
@@ -30,12 +34,17 @@ public class TextureProvider
             loadedSprites = new Dictionary<string, Sprite>();
             Sprite[] sprites = Resources.LoadAll<Sprite>("Textures/Tilesets");
             Sprite[] itemSprites = Resources.LoadAll<Sprite>("Textures/Items");
+            Sprite[] npcSprites = Resources.LoadAll<Sprite>("Textures/NPCs/Horse");
 
             foreach (var sprite in sprites)
             {
                 loadedSprites[sprite.name] = sprite;
             }
             foreach (var sprite in itemSprites)
+            {
+                loadedSprites[sprite.name] = sprite;
+            }
+            foreach (var sprite in npcSprites)
             {
                 loadedSprites[sprite.name] = sprite;
             }
@@ -52,8 +61,6 @@ public class TextureProvider
             string name = textureNames[randomIndex];
             if (loadedSprites.TryGetValue(name, out Sprite sprite))
             {
-                //change sprite scale to 16x16
-                sprite.rect.Set(0, 0, 16, 16);
                 return sprite;
             }
         }
@@ -65,6 +72,22 @@ public class TextureProvider
         LoadSprites();
 
         if (itemTextureMappings.TryGetValue(texture, out string[] textureNames))
+        {
+            int randomIndex = Random.Range(0, textureNames.Length);
+            string name = textureNames[randomIndex];
+            if (loadedSprites.TryGetValue(name, out Sprite sprite))
+            {
+                return sprite;
+            }
+        }
+
+        return null;
+    }
+    public static Sprite GetNPCSprite(NPC.Texture texture)
+    {
+        LoadSprites();
+
+        if (npcTextureMappings.TryGetValue(texture, out string[] textureNames))
         {
             int randomIndex = Random.Range(0, textureNames.Length);
             string name = textureNames[randomIndex];
