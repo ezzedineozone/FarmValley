@@ -5,7 +5,7 @@ using Unity.VisualScripting;
 
 public class Character : MonoBehaviour
 {
-    [SerializeField] float movement_sensitivity = 1f;
+    [SerializeField] public float movement_sensitivity = 1f;
     [SerializeField] GameEvents gameEvents; 
 
     public Animator anim;
@@ -93,7 +93,14 @@ void HandleCharacterMovement()
     if (isMoving)
     {
         look_direction = input.normalized;
-
+        if (transform.childCount > 0)
+        {
+            Horse mountedHorse = GetComponentInChildren<Horse>();
+            if (mountedHorse != null)
+            {
+                mountedHorse.UpdateMountedAnimation(movement);
+            }
+        }
         anim.SetFloat("x_speed", hz);
         anim.SetFloat("y_speed", vt);
 

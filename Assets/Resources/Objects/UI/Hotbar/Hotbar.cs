@@ -97,6 +97,7 @@ public class Hotbar : MonoBehaviour
             selectedSlot = hotBarSlots[nextIndex];
             selectedSlot.Select();
         }
+        gameEvents.onHotbarChange.Invoke(selectedSlot.GetItem());
     }
     public Item GetItem(){
         return this.selectedSlot.GetItem();

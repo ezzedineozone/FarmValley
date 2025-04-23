@@ -11,4 +11,5 @@ class GameEvents : ScriptableObject
     public UnityEvent<Item> onItemPickup = new UnityEvent<Item>();
     public UnityEvent onDayPassed = new UnityEvent();
     public UnityEvent onPlayerSleep = new UnityEvent();
+    public UnityEvent<Item> onHotbarChange = new UnityEvent<Item>();
 }
