@@ -17,11 +17,11 @@ public class Horse : NPC
 
     private Vector2 roamingDirection;
     private float stateTimer;
-    private bool isWalking;
+    private bool isWalking = true;
     private bool isEating;
-    private bool follows_player;
-    private bool is_tamed;
-    private bool isMounted;
+    private bool follows_player = false;
+    private bool is_tamed = false;
+    private bool isMounted = false;
 
     private Rigidbody2D rb;
     private Animator anim;
@@ -40,6 +40,7 @@ public class Horse : NPC
         gameEvents.onHotbarChange.AddListener(playerHotBarSlotChange);
         gameEvents.onPlayerInteractWithItem.AddListener(onPlayerInteract);
     }
+
     public void UpdateMountedAnimation(Vector2 movement)
     {
         if (!isMounted || anim == null) return;
@@ -51,7 +52,6 @@ public class Horse : NPC
         {
             anim.SetFloat("move_x", movement.x);
             anim.SetFloat("move_y", movement.y);
-
             transform.localScale = new Vector3(movement.x < -0.1f ? -1 : 1, 1, 1);
         }
     }
@@ -104,19 +104,17 @@ public class Horse : NPC
         transform.SetParent(player.transform);
         transform.localPosition = new Vector3(0, -0.05f, 0);
         rb.isKinematic = true;
-        Character.instance.movement_sensitivity = 1.5f; 
+        Character.instance.movement_sensitivity = 1.5f;
         anim.SetBool("is_mounted", true);
+
         Vector3 newPosition = this.transform.position;
         newPosition.z = -2.0f;
         this.transform.position = newPosition;
 
-        // Disable AI movement while mounted
         StopCoroutines();
         isWalking = false;
         follows_player = false;
     }
-
-
 
     private void UnmountHorse()
     {
@@ -128,15 +126,11 @@ public class Horse : NPC
         isMounted = false;
 
         transform.SetParent(null);
-        transform.position = player.transform.position + new Vector3(1f, 0, 0); // dismount offset
+        transform.position = player.transform.position + new Vector3(1f, 0, 0);
         rb.isKinematic = false;
         anim.SetBool("is_mounted", false);
 
-        // Optionally resume roaming or following
-        if (is_tamed)
-        {
-            follows_player = true;
-        }
+        if (is_tamed) follows_player = true;
         StartCoroutines();
     }
 
@@ -152,7 +146,7 @@ public class Horse : NPC
 
         stateTimer -= Time.deltaTime;
 
-        if (follows_player || is_tamed && !isMounted)
+        if (follows_player || (is_tamed && !isMounted))
         {
             Character player = Character.instance;
             Vector2 playerPosition = player.transform.position;
@@ -166,7 +160,6 @@ public class Horse : NPC
                 anim.SetBool("is_moving", true);
                 anim.SetFloat("move_x", directionToPlayer.x);
                 anim.SetFloat("move_y", directionToPlayer.y);
-
                 transform.localScale = new Vector3(directionToPlayer.x < -0.1f ? -1 : 1, 1, 1);
             }
             else
@@ -177,23 +170,19 @@ public class Horse : NPC
             return;
         }
 
-        bool shouldMove = isWalking && !IsObstacleAhead();
-
-        if (anim != null)
+        if (roamingDirection == Vector2.zero)
         {
-            anim.SetBool("is_moving", shouldMove);
-
-            if (shouldMove)
-            {
-                anim.SetFloat("move_x", roamingDirection.x);
-                anim.SetFloat("move_y", roamingDirection.y);
-
-                transform.localScale = new Vector3(roamingDirection.x < -0.1f ? -1 : 1, 1, 1);
-            }
+            ChooseRoamingDirection();
         }
 
+        bool shouldMove = isWalking && !IsObstacleAhead();
+
+        anim.SetBool("is_moving", shouldMove);
         if (shouldMove)
         {
+            anim.SetFloat("move_x", roamingDirection.x);
+            anim.SetFloat("move_y", roamingDirection.y);
+            transform.localScale = new Vector3(roamingDirection.x < -0.1f ? -1 : 1, 1, 1);
             rb.MovePosition(rb.position + roamingDirection * moveSpeed * Time.deltaTime);
         }
 
@@ -209,6 +198,9 @@ public class Horse : NPC
     public override void StartRoaming()
     {
         base.StartRoaming();
+        ChooseRoamingDirection();
+        isWalking = true;
+        isRoaming = true;
         stateTimer = 0f;
         Debug.Log("Horse started randomly walking/standing.");
     }
@@ -271,6 +263,11 @@ public class Horse : NPC
         {
             yield return new WaitForSeconds(Random.Range(5f, 8f));
             ChooseRoamingDirection();
+            while (roamingDirection == Vector2.zero)
+            {
+                ChooseRoamingDirection(); // Retry until a valid direction is chosen
+                yield return null;
+            }
         }
     }
 
@@ -302,11 +299,11 @@ public class Horse : NPC
 
     private void StartCoroutines()
     {
-        if (eatingCoroutine == null)
-            eatingCoroutine = StartCoroutine(RandomEatingCoroutine());
-
         if (roamDirectionCoroutine == null)
             roamDirectionCoroutine = StartCoroutine(ChangeRoamingDirectionCoroutine());
+
+        if (eatingCoroutine == null)
+            eatingCoroutine = StartCoroutine(RandomEatingCoroutine());
     }
 
     private void StopCoroutines()
@@ -333,6 +330,6 @@ public class Horse : NPC
 
     public bool IsPlayerLookingAt(Vector2 lookDir)
     {
-        return true; // Simplified - you can implement this better based on direction checks
+        return true; // Simplified placeholder
     }
 }
